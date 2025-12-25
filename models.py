@@ -1,0 +1,19 @@
+from db import db
+import datetime
+import json
+
+class Watch(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    tabelog_url = db.Column(db.String(500), nullable=False)
+    rst_id = db.Column(db.String(50), nullable=True) # Cached ID
+    webhook_url = db.Column(db.String(500), nullable=False)
+    last_state = db.Column(db.Text, nullable=True) # Stored as JSON string
+    created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+
+    def set_state(self, state_dict):
+        self.last_state = json.dumps(state_dict)
+
+    def get_state(self):
+        if self.last_state:
+            return json.loads(self.last_state)
+        return None

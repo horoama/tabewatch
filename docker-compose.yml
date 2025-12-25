@@ -1,0 +1,23 @@
+services:
+  web:
+    build: .
+    command: python app.py
+    ports:
+      - "5000:5000"
+    volumes:
+      - .:/app
+    environment:
+      - DATABASE_URL=sqlite:///tabelog.db
+      - FLASK_DEBUG=1
+    restart: always
+
+  worker:
+    build: .
+    command: python worker.py
+    volumes:
+      - .:/app
+    environment:
+      - DATABASE_URL=sqlite:///tabelog.db
+      - CHECK_INTERVAL=300
+      - PROXY=${PROXY}
+    restart: always
