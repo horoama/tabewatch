@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for
 from db import db
-from models import Watch
+from models import Watch, WatchHistory
 import logic
 import os
 
@@ -38,6 +38,24 @@ def add_watch():
         db.session.commit()
 
     return redirect(url_for('index'))
+
+@app.route('/delete/<int:watch_id>', methods=['POST'])
+def delete_watch(watch_id):
+    watch = db.session.get(Watch, watch_id)
+    if watch:
+        db.session.delete(watch)
+        db.session.commit()
+    return redirect(url_for('index'))
+
+@app.route('/history/<int:watch_id>')
+def history(watch_id):
+    watch = db.session.get(Watch, watch_id)
+    if not watch:
+        return redirect(url_for('index'))
+
+    # Retrieve history, ordered by newest first
+    history_records = WatchHistory.query.filter_by(watch_id=watch_id).order_by(WatchHistory.timestamp.desc()).all()
+    return render_template('history.html', watch=watch, history=history_records)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)

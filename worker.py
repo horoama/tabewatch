@@ -3,7 +3,7 @@ import logging
 import os
 from flask import Flask
 from db import db
-from models import Watch
+from models import Watch, WatchHistory
 import logic
 
 # Setup logging
@@ -58,6 +58,12 @@ def run_check(app):
                     changes = logic.compare_states(previous_state, current_state)
                     if changes:
                         logger.info(f"Changes detected for {watch.id}")
+
+                        # Save History
+                        history_entry = WatchHistory(watch_id=watch.id)
+                        history_entry.set_details(changes)
+                        db.session.add(history_entry)
+
                         message = f"**🔄 Status Changed!**\n{watch.tabelog_url}\n\n"
                         message += "\n".join(changes[:20])
                         if len(changes) > 20:

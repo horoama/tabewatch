@@ -10,6 +10,9 @@ class Watch(db.Model):
     last_state = db.Column(db.Text, nullable=True) # Stored as JSON string
     created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
 
+    # Relationship
+    history = db.relationship('WatchHistory', backref='watch', cascade="all, delete-orphan", lazy=True)
+
     def set_state(self, state_dict):
         self.last_state = json.dumps(state_dict)
 
@@ -17,3 +20,17 @@ class Watch(db.Model):
         if self.last_state:
             return json.loads(self.last_state)
         return None
+
+class WatchHistory(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    watch_id = db.Column(db.Integer, db.ForeignKey('watch.id'), nullable=False)
+    timestamp = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+    details = db.Column(db.Text, nullable=False) # JSON list of change strings
+
+    def set_details(self, changes_list):
+        self.details = json.dumps(changes_list)
+
+    def get_details(self):
+        if self.details:
+            return json.loads(self.details)
+        return []

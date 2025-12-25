@@ -36,25 +36,34 @@
         <div class="card-body">
           {% if watches %}
           <div class="table-responsive">
-            <table class="table table-striped">
+            <table class="table table-striped align-middle">
               <thead>
                 <tr>
                   <th>Restaurant URL</th>
                   <th>Created At</th>
                   <th>Status</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {% for watch in watches %}
                 <tr>
-                  <td><a href="{{ watch.tabelog_url }}" target="_blank">{{ watch.tabelog_url }}</a></td>
-                  <td>{{ watch.created_at }}</td>
+                  <td><a href="{{ watch.tabelog_url }}" target="_blank" class="text-decoration-none text-truncate d-inline-block" style="max-width: 300px;">{{ watch.tabelog_url }}</a></td>
+                  <td>{{ watch.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
                   <td>
                     {% if watch.rst_id %}
                       <span class="badge bg-success">Active (ID: {{ watch.rst_id }})</span>
                     {% else %}
                       <span class="badge bg-warning text-dark">Pending Init</span>
                     {% endif %}
+                  </td>
+                  <td>
+                    <div class="d-flex gap-2">
+                        <a href="{{ url_for('history', watch_id=watch.id) }}" class="btn btn-sm btn-info text-white">History</a>
+                        <form action="{{ url_for('delete_watch', watch_id=watch.id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this monitor?');">
+                            <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                        </form>
+                    </div>
                   </td>
                 </tr>
                 {% endfor %}
