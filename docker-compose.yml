@@ -1,6 +1,12 @@
 services:
   web:
-    build: .
+    build:
+      context: .
+      args:
+        - HTTP_PROXY
+        - HTTPS_PROXY
+        - http_proxy
+        - https_proxy
     command: python app.py
     ports:
       - "5000:5000"
@@ -12,7 +18,13 @@ services:
     restart: always
 
   worker:
-    build: .
+    build:
+      context: .
+      args:
+        - HTTP_PROXY
+        - HTTPS_PROXY
+        - http_proxy
+        - https_proxy
     command: python worker.py
     volumes:
       - .:/app
