@@ -163,10 +163,14 @@ def main():
     parser.add_argument("tabelog_url", help="URL of the Tabelog restaurant page")
     parser.add_argument("discord_webhook_url", help="Discord Webhook URL", nargs='?')
     parser.add_argument("--interval", type=int, help="Interval in seconds for periodic checks. If not set, runs once.", default=0)
+    parser.add_argument("--proxy", help="Proxy URL (e.g., http://user:pass@host:port)")
 
     args = parser.parse_args()
 
     session = requests.Session()
+    if args.proxy:
+        session.proxies.update({"http": args.proxy, "https": args.proxy})
+
     session.headers.update({
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
         "X-Requested-With": "XMLHttpRequest",
