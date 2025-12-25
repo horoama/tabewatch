@@ -15,6 +15,7 @@ services:
     environment:
       - DATABASE_URL=sqlite:///tabelog.db
       - FLASK_DEBUG=1
+      - PROXY=${PROXY}
     restart: always
 
   worker:

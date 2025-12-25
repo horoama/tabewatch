@@ -26,7 +26,7 @@ def add_watch():
     if tabelog_url and webhook_url:
         # Try to resolve rst_id immediately to validate URL (optional, but good UX)
         # Note: In a real app, this might be async, but for now we do it synchronously
-        session = logic.get_session()
+        session = logic.get_session(proxy=os.environ.get('PROXY'))
         rst_id = logic.get_rst_id(tabelog_url, session)
 
         watch = Watch(
