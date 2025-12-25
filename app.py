@@ -22,6 +22,10 @@ def index():
 def add_watch():
     tabelog_url = request.form.get('tabelog_url')
     webhook_url = request.form.get('webhook_url')
+    interval_min = request.form.get('interval', type=int, default=5)
+
+    if interval_min < 1:
+        interval_min = 1
 
     if tabelog_url and webhook_url:
         # Try to resolve rst_id immediately to validate URL (optional, but good UX)
@@ -32,7 +36,8 @@ def add_watch():
         watch = Watch(
             tabelog_url=tabelog_url,
             webhook_url=webhook_url,
-            rst_id=rst_id
+            rst_id=rst_id,
+            check_interval=interval_min * 60
         )
         db.session.add(watch)
         db.session.commit()

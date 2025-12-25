@@ -9,6 +9,8 @@ class Watch(db.Model):
     webhook_url = db.Column(db.String(500), nullable=False)
     last_state = db.Column(db.Text, nullable=True) # Stored as JSON string
     created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+    check_interval = db.Column(db.Integer, default=300) # seconds
+    last_checked_at = db.Column(db.DateTime, nullable=True)
 
     # Relationship
     history = db.relationship('WatchHistory', backref='watch', cascade="all, delete-orphan", lazy=True)

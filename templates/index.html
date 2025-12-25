@@ -24,6 +24,11 @@
               <label for="webhook_url" class="form-label">Discord Webhook URL</label>
               <input type="url" class="form-control" id="webhook_url" name="webhook_url" placeholder="https://discord.com/api/webhooks/..." required>
             </div>
+            <div class="mb-3">
+                <label for="interval" class="form-label">Check Interval (minutes)</label>
+                <input type="number" class="form-control" id="interval" name="interval" min="1" value="5" required>
+                <div class="form-text">Minimum 1 minute.</div>
+            </div>
             <button type="submit" class="btn btn-primary">Start Monitoring</button>
           </form>
         </div>
@@ -40,7 +45,8 @@
               <thead>
                 <tr>
                   <th>Restaurant URL</th>
-                  <th>Created At</th>
+                  <th>Interval</th>
+                  <th>Last Checked (UTC)</th>
                   <th>Status</th>
                   <th>Actions</th>
                 </tr>
@@ -49,7 +55,8 @@
                 {% for watch in watches %}
                 <tr>
                   <td><a href="{{ watch.tabelog_url }}" target="_blank" class="text-decoration-none text-truncate d-inline-block" style="max-width: 300px;">{{ watch.tabelog_url }}</a></td>
-                  <td>{{ watch.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                  <td>{{ (watch.check_interval / 60) | int }} mins</td>
+                  <td>{{ watch.last_checked_at.strftime('%Y-%m-%d %H:%M:%S') if watch.last_checked_at else 'Never' }}</td>
                   <td>
                     {% if watch.rst_id %}
                       <span class="badge bg-success">Active (ID: {{ watch.rst_id }})</span>
