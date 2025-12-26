@@ -1,0 +1,36 @@
+services:
+  web:
+    build:
+      context: .
+      args:
+        - HTTP_PROXY
+        - HTTPS_PROXY
+        - http_proxy
+        - https_proxy
+    command: python app.py
+    ports:
+      - "5000:5000"
+    volumes:
+      - .:/app
+    environment:
+      - DATABASE_URL=sqlite:///tabelog.db
+      - FLASK_DEBUG=1
+      - PROXY=${PROXY}
+    restart: always
+
+  worker:
+    build:
+      context: .
+      args:
+        - HTTP_PROXY
+        - HTTPS_PROXY
+        - http_proxy
+        - https_proxy
+    command: python worker.py
+    volumes:
+      - .:/app
+    environment:
+      - DATABASE_URL=sqlite:///tabelog.db
+      - CHECK_INTERVAL=300
+      - PROXY=${PROXY}
+    restart: always

@@ -1,0 +1,66 @@
+from flask import Flask, render_template, request, redirect, url_for
+from db import db
+from models import Watch, WatchHistory
+import logic
+import os
+
+app = Flask(__name__)
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///tabelog.db')
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+db.init_app(app)
+
+with app.app_context():
+    db.create_all()
+
+@app.route('/')
+def index():
+    watches = Watch.query.order_by(Watch.created_at.desc()).all()
+    return render_template('index.html', watches=watches)
+
+@app.route('/add', methods=['POST'])
+def add_watch():
+    tabelog_url = request.form.get('tabelog_url')
+    webhook_url = request.form.get('webhook_url')
+    interval_min = request.form.get('interval', type=int, default=5)
+
+    if interval_min < 1:
+        interval_min = 1
+
+    if tabelog_url and webhook_url:
+        # Try to resolve rst_id immediately to validate URL (optional, but good UX)
+        # Note: In a real app, this might be async, but for now we do it synchronously
+        session = logic.get_session(proxy=os.environ.get('PROXY'))
+        rst_id = logic.get_rst_id(tabelog_url, session)
+
+        watch = Watch(
+            tabelog_url=tabelog_url,
+            webhook_url=webhook_url,
+            rst_id=rst_id,
+            check_interval=interval_min * 60
+        )
+        db.session.add(watch)
+        db.session.commit()
+
+    return redirect(url_for('index'))
+
+@app.route('/delete/<int:watch_id>', methods=['POST'])
+def delete_watch(watch_id):
+    watch = db.session.get(Watch, watch_id)
+    if watch:
+        db.session.delete(watch)
+        db.session.commit()
+    return redirect(url_for('index'))
+
+@app.route('/history/<int:watch_id>')
+def history(watch_id):
+    watch = db.session.get(Watch, watch_id)
+    if not watch:
+        return redirect(url_for('index'))
+
+    # Retrieve history, ordered by newest first
+    history_records = WatchHistory.query.filter_by(watch_id=watch_id).order_by(WatchHistory.timestamp.desc()).all()
+    return render_template('history.html', watch=watch, history=history_records)
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000, debug=True)
