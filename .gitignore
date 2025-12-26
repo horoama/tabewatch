@@ -11,3 +11,4 @@ instance/
 *.log
 .DS_Store
 verification/
+certs/
