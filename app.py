@@ -1,10 +1,12 @@
 from flask import Flask, render_template, request, redirect, url_for
+from werkzeug.middleware.proxy_fix import ProxyFix
 from db import db
 from models import Watch, WatchHistory
 import logic
 import os
 
 app = Flask(__name__)
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///tabelog.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 

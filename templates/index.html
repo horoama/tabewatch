@@ -15,7 +15,7 @@
           Add New Watch
         </div>
         <div class="card-body">
-          <form method="POST" action="/add">
+          <form method="POST" action="{{ url_for('add_watch') }}">
             <div class="mb-3">
               <label for="tabelog_url" class="form-label">Tabelog Restaurant URL</label>
               <input type="url" class="form-control" id="tabelog_url" name="tabelog_url" placeholder="https://tabelog.com/..." required>
