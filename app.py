@@ -4,6 +4,7 @@ from db import db
 from models import Watch, WatchHistory
 import logic
 import os
+import datetime
 
 app = Flask(__name__)
 app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
@@ -52,6 +53,29 @@ def delete_watch(watch_id):
     if watch:
         db.session.delete(watch)
         db.session.commit()
+    return redirect(url_for('index'))
+
+@app.route('/update_settings/<int:watch_id>', methods=['POST'])
+def update_settings(watch_id):
+    watch = db.session.get(Watch, watch_id)
+    if watch:
+        suppress_until_str = request.form.get('suppress_until')
+        notify_on_weekends = request.form.get('notify_on_weekends') == 'on'
+
+        watch.notify_on_weekends = notify_on_weekends
+
+        if suppress_until_str:
+            try:
+                # datetime-local format: YYYY-MM-DDTHH:MM
+                watch.suppress_until = datetime.datetime.strptime(suppress_until_str, '%Y-%m-%dT%H:%M')
+            except ValueError:
+                # If parsing fails or empty (though checked above), set to None
+                watch.suppress_until = None
+        else:
+            watch.suppress_until = None
+
+        db.session.commit()
+
     return redirect(url_for('index'))
 
 @app.route('/history/<int:watch_id>')

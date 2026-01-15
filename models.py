@@ -12,6 +12,10 @@ class Watch(db.Model):
     check_interval = db.Column(db.Integer, default=300) # seconds
     last_checked_at = db.Column(db.DateTime, nullable=True)
 
+    # Notification suppression
+    suppress_until = db.Column(db.DateTime, nullable=True)
+    notify_on_weekends = db.Column(db.Boolean, default=False)
+
     # Relationship
     history = db.relationship('WatchHistory', backref='watch', cascade="all, delete-orphan", lazy=True)
 

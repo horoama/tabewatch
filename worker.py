@@ -6,6 +6,7 @@ from flask import Flask
 from db import db
 from models import Watch, WatchHistory
 import logic
+import re
 
 # Setup logging
 logging.basicConfig(
@@ -20,6 +21,21 @@ def create_app():
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     db.init_app(app)
     return app
+
+def is_weekend_change(change_str):
+    # logic.compare_states returns strings like "🆕 2023-10-27: ..." or "📅 2023-10-27: ..."
+    # We extract the date and check if it's Saturday or Sunday
+    match = re.search(r'(\d{4}-\d{2}-\d{2})', change_str)
+    if match:
+        date_str = match.group(1)
+        try:
+            dt = datetime.datetime.strptime(date_str, '%Y-%m-%d')
+            # weekday(): 0=Mon, 5=Sat, 6=Sun
+            if dt.weekday() >= 5:
+                return True
+        except ValueError:
+            pass
+    return False
 
 def run_check(app):
     with app.app_context():
@@ -71,17 +87,33 @@ def run_check(app):
                     if changes:
                         logger.info(f"Changes detected for {watch.id}")
 
-                        # Save History
+                        # Check suppression
+                        should_notify = True
+                        if watch.suppress_until and now < watch.suppress_until:
+                            should_notify = False
+                            # Check weekend override
+                            if watch.notify_on_weekends:
+                                # Check if any change is on a weekend
+                                if any(is_weekend_change(c) for c in changes):
+                                    should_notify = True
+                                    logger.info(f"Watch {watch.id} suppressed but weekend change detected. Notifying.")
+                                else:
+                                    logger.info(f"Watch {watch.id} suppressed. No weekend changes.")
+                            else:
+                                logger.info(f"Watch {watch.id} suppressed.")
+
+                        # Save History (even if suppressed, we record the change)
                         history_entry = WatchHistory(watch_id=watch.id)
                         history_entry.set_details(changes)
                         db.session.add(history_entry)
 
-                        message = f"**🔄 Status Changed!**\n{watch.tabelog_url}\n\n"
-                        message += "\n".join(changes[:20])
-                        if len(changes) > 20:
-                            message += f"\n...and {len(changes)-20} more."
+                        if should_notify:
+                            message = f"**🔄 Status Changed!**\n{watch.tabelog_url}\n\n"
+                            message += "\n".join(changes[:20])
+                            if len(changes) > 20:
+                                message += f"\n...and {len(changes)-20} more."
 
-                        logic.notify_discord(watch.webhook_url, message)
+                            logic.notify_discord(watch.webhook_url, message)
 
                         # Update state only if changed
                         watch.set_state(current_state)
